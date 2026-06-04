@@ -573,6 +573,7 @@
 </main>
 
 <div class="action-bar">
+  <button class="secondary" onclick="saveResponses()">Save answers</button>
   <button onclick="submitResponses()">Submit</button>
   <div class="toast" id="toast">Submitted</div>
 </div>
@@ -634,6 +635,63 @@
     document.body.removeChild(ta);
   }
 
+  function saveResponses() {
+    const text = compileResponses();
+    const name = (document.getElementById('r-name').value || 'responses').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = `wholesale-questionnaire_${name}_${date}.txt`;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast(`Saved as ${filename}`);
+  }
+
+  // ---- Auto-save to localStorage (resumable) ----
+  const STORAGE_KEY = 'wholesale-questionnaire-v1';
+
+  function getAllFieldIds() {
+    return ['r-name', 'r-role', 'r-email', 'r-date',
+      ...SECTIONS.flatMap(s => s.ids.map(id => `a-${id}`))];
+  }
+
+  function snapshotState() {
+    const out = {};
+    getAllFieldIds().forEach(id => {
+      const el = document.getElementById(id);
+      if (el) out[id] = el.value || '';
+    });
+    return out;
+  }
+
+  function autoSave() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        savedAt: new Date().toISOString(),
+        fields: snapshotState(),
+      }));
+    } catch (e) { /* localStorage full / blocked — silent */ }
+  }
+
+  function restoreFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (!data || !data.fields) return false;
+      Object.entries(data.fields).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el && val && !el.value) el.value = val;
+      });
+      return true;
+    } catch (e) { return false; }
+  }
+
   function submitResponses() {
     const text = compileResponses();
     const name = document.getElementById('r-name').value || '(not provided)';
@@ -673,11 +731,24 @@
       });
   }
 
-  // Default the date field to today
+  // Default the date field to today + restore any saved progress + wire auto-save
   document.addEventListener('DOMContentLoaded', () => {
     const d = new Date();
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     document.getElementById('r-date').value = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+    restoreFromStorage();
+
+    // Auto-save on every change (debounced)
+    let saveTimer = null;
+    const scheduleSave = () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(autoSave, 500);
+    };
+    getAllFieldIds().forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', scheduleSave);
+    });
   });
 </script>
 
