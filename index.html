@@ -574,8 +574,8 @@
 
 <div class="action-bar">
   <button class="secondary" onclick="saveResponses()">Save answers</button>
-  <button onclick="submitResponses()">Submit</button>
-  <div class="toast" id="toast">Submitted</div>
+  <button onclick="sendByEmail()">Send by email</button>
+  <div class="toast" id="toast"></div>
 </div>
 
 <script>
@@ -692,43 +692,26 @@
     } catch (e) { return false; }
   }
 
-  function submitResponses() {
+  function sendByEmail() {
     const text = compileResponses();
     const name = document.getElementById('r-name').value || '(not provided)';
-    const email = document.getElementById('r-email').value || '';
-    const btn = document.querySelector('.action-bar button');
-    if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+    const to = 'balrajplus971@gmail.com';
+    const cc = 'akito.yamada12@gmail.com';
+    const subject = `Wholesale questionnaire — ${name}`;
 
-    fetch('https://formsubmit.co/ajax/balrajplus971@gmail.com', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        _subject: `Wholesale questionnaire — ${name}`,
-        _cc: 'akito.yamada12@gmail.com',
-        _replyto: email,
-        _captcha: 'false',
-        _template: 'box',
-        Respondent: name,
-        Responses: text,
-      }),
-    })
-      .then(r => r.json())
-      .then(d => {
-        if (d.success === 'true' || d.success === true) {
-          showToast('Submitted ✓  Thank you');
-          if (btn) btn.textContent = 'Submitted ✓';
-          // also copy to clipboard as a backup
-          if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
-        } else {
-          throw new Error(d.message || 'Submission failed');
-        }
-      })
-      .catch(err => {
-        showToast('Submit failed — copied to clipboard, please email balrajplus971@gmail.com');
-        if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
-        else fallbackCopy(text);
-        if (btn) { btn.disabled = false; btn.textContent = 'Submit'; }
-      });
+    // Copy full text to clipboard as a backup (mailto URLs can be truncated by some clients)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+
+    const mailto = `mailto:${to}?cc=${encodeURIComponent(cc)}` +
+      `&subject=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(text)}`;
+
+    showToast('Opening your email app — review and click Send');
+    window.location.href = mailto;
   }
 
   // Default the date field to today + restore any saved progress + wire auto-save
