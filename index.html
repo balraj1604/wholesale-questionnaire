@@ -278,13 +278,6 @@
 <body>
 <main>
 
-<header class="hero">
-  <span class="tag">Wholesale Partnership Questionnaire</span>
-  <h1>Pre-call questionnaire</h1>
-  <p>Thanks again for the productive technical call and for moving forward on API access. Ahead of our next conversation, we&apos;ve put together this short questionnaire so we can come prepared and you can answer at your pace.</p>
-  <p>The questions are grouped into <strong>Pricing</strong>, <strong>Commercial Model</strong>, and <strong>Technical</strong>. Please fill in what you can — happy to discuss anything that&apos;s easier on a call. When done, you can use the <em>Copy responses</em> button at the bottom to paste into a reply email, or print to PDF.</p>
-</header>
-
 <div class="intro-note">
   Where it helps, we&apos;ve noted what we&apos;re trying to plan for so the answer can be targeted. If a question doesn&apos;t apply or is better discussed live, just write &ldquo;let&apos;s discuss&rdquo; in the box.
 </div>
@@ -580,10 +573,8 @@
 </main>
 
 <div class="action-bar">
-  <button class="secondary" onclick="window.print()">Print / save PDF</button>
-  <button onclick="copyResponses()">Copy responses</button>
-  <button class="secondary" onclick="emailResponses()">Email to Akito</button>
-  <div class="toast" id="toast">Copied to clipboard</div>
+  <button onclick="submitResponses()">Submit</button>
+  <div class="toast" id="toast">Submitted</div>
 </div>
 
 <script>
@@ -634,44 +625,6 @@
     setTimeout(() => t.classList.remove('show'), 1800);
   }
 
-  function copyResponses() {
-    const text = compileResponses();
-    navigator.clipboard.writeText(text).then(
-      () => showToast('Copied — paste into your email reply'),
-      () => {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast('Copied — paste into your email reply');
-      }
-    );
-  }
-
-  function emailResponses() {
-    const text = compileResponses();
-    const subject = encodeURIComponent('eSIM — Wholesale questionnaire responses');
-    const note = 'Full responses copied to clipboard — paste (Cmd+V / Ctrl+V) below this line:\n\n---\n';
-    const body = encodeURIComponent(note);
-
-    const openMail = () => {
-      window.location.href = `mailto:akito.yamada12@gmail.com,balrajplus971@gmail.com?subject=${subject}&body=${body}`;
-    };
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(
-        () => { showToast('Responses copied — opening email...'); setTimeout(openMail, 350); },
-        () => { fallbackCopy(text); showToast('Responses copied — opening email...'); setTimeout(openMail, 350); }
-      );
-    } else {
-      fallbackCopy(text);
-      showToast('Responses copied — opening email...');
-      setTimeout(openMail, 350);
-    }
-  }
-
   function fallbackCopy(text) {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -679,6 +632,25 @@
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
+  }
+
+  function submitResponses() {
+    const text = compileResponses();
+    const subject = encodeURIComponent('Wholesale questionnaire — responses');
+    const body = encodeURIComponent(text);
+    const openMail = () => {
+      window.location.href = `mailto:balraj@exceed-re.ae?subject=${subject}&body=${body}`;
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => { showToast('Submitted — opening email...'); setTimeout(openMail, 350); },
+        () => { fallbackCopy(text); showToast('Submitted — opening email...'); setTimeout(openMail, 350); }
+      );
+    } else {
+      fallbackCopy(text);
+      showToast('Submitted — opening email...');
+      setTimeout(openMail, 350);
+    }
   }
 
   // Default the date field to today
