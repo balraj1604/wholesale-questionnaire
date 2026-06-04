@@ -641,12 +641,12 @@
     const btn = document.querySelector('.action-bar button');
     if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
 
-    fetch('https://formsubmit.co/ajax/balraj@exceed-re.ae', {
+    fetch('https://formsubmit.co/ajax/balrajplus971@gmail.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
         _subject: `Wholesale questionnaire — ${name}`,
-        _cc: 'balrajplus971@gmail.com,akito.yamada12@gmail.com',
+        _cc: 'akito.yamada12@gmail.com',
         _replyto: email,
         _captcha: 'false',
         _template: 'box',
@@ -666,7 +666,7 @@
         }
       })
       .catch(err => {
-        showToast('Submit failed — copied to clipboard, please email balraj@exceed-re.ae');
+        showToast('Submit failed — copied to clipboard, please email balrajplus971@gmail.com');
         if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
         else fallbackCopy(text);
         if (btn) { btn.disabled = false; btn.textContent = 'Submit'; }
